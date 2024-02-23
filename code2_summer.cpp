@@ -1,90 +1,230 @@
 /*	
-	Student ID		:	[redacted]
-	Name			:	Deepthi Jibu Valachery
-	Course code		:	COMP1602 
-	Course name		:	Computer Programming II
-	Assignment		:	1
+	Student Name	:	Deepthi Jibu Valahery
+	Student ID		:	[redact]
+	Course Code		:	COMP1602 (Summer)
+	Course Name		:	Computer Programming II
+	Assignment		:	2
 */
 
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include <iomanip>
 using namespace std;
 
-struct Stalls{				//Structures to hold data
-	string name;
-	double income;
-	double expense;
-	double netIncome;
+struct str {
+	string s;
 };
 
-    Stalls stall [100];		//Global variables
-	int numStalls;  
+int tries = 12;
+string message = "You have 12 chances!";
 
-void viewReport(){			//function
-	ifstream in;
-    string name;
-	double income, expense, tProfit = 0;
+int readWords (str data[]){
+	ifstream in;     
+	string w;                  
+	
+	in.open("words.txt");     
+	
+	if (!in.is_open()) {         
+		cout << "File could not be opened. Aborting..." << endl;         
+		return -1;
+	}         
+	
+	int numWords = 0; 
+	in >> w;  
+	   
+	while (w!="ENDDATA") {           
+		data[numWords].s = w;      
+		numWords++;          
+		in >> w;     
+	}   
+	cout<<"Printing Words from InputFile Words.txt: \n";  
+    for (int i=0;i<numWords;i++){
+		for (int j=0;j<4;j++){
+			cout << setw(20) << data[i].s;
+			i++;
+		}
+		cout << "\n";
+	}       
+	in.close();    
+	return numWords; 
+}
 
-    in.open("stalls.txt");	//Input File checker
-    if (!in.is_open()) {
-       cout << "Stalls.txt could not be opened. Aborting program ..." << endl; 
-       return exit(1);
+bool binarySearch (str data[], int numWords, string key) {
+    int low, high, mid;
+     
+	low = 0;
+    high = numWords - 1;
+     
+    while (low <= high) {
+        mid = (low + high) / 2;
+        if (key == data[mid].s) 
+            return mid;
+        else
+        if (key > data[mid].s)
+            low = mid + 1;
+        else
+            high = mid - 1;
     }
-    in >> name;				//Read data
-    numStalls = 0;
+    return false;
+}
 
-    while (name!="ENDDATA") { 					// Ends with ENDDATA
-    	in >> income;
-    	in >> expense;
-    	stall[numStalls].name = name;			//Store data
-    	stall[numStalls].netIncome = income - expense;
-    	stall[numStalls].income = income;
-    	stall[numStalls].expense = expense;
-    	numStalls++;
-    	in >> name;
-    }
-    in.close();
-	 
-    for (int i=0;i<numStalls-1;i++) {				//Using selection sort
+int removeDuplicates (str data[], int n){
+	if (n==0 || n==1){
+		return n;
+	}
+	str temp[n];
+	int j=0;
+	
+	for (int i=0;i<n-1;i++){
+		if (data[i].s!=data[i+1].s){
+			temp[j++] = data[i];
+		}
+	}
+	temp[j++] = data[n-1];
+	
+	for (int i=0;i<j;i++)
+        data[i] = temp[i];
+ 
+    return j;	
+}
+
+int start(str data[], int numWords){
+	string word;
+	
+	for(int i=0;i<numWords;i++){
+		word = data[i].s;
+		char* char_array = new char[word.length()+1]; 
+		for (int x=0;x<word.length();x++){
+			char_array[x] = word[x];
+			if (char_array[x] >= 'A' && char_array[x] <= 'Z' ){
+				char_array[x] = char_array[x] + 32;
+			}
+			word[x] = char_array[x];
+		}
+		data[i].s = word;
+	}
+	
+    for (int i=0;i<numWords-1;i++) {
 		int minLoc = i; 
 
-		for (int j=i+1;j<=numStalls-1;j++){
-			if(stall[j].netIncome < stall[minLoc].netIncome) 	
+		for (int j=i+1;j<=numWords-1;j++){
+			if(data[j].s < data[minLoc].s) 	
 				minLoc = j; 
 		}
-		Stalls temp = stall[i];
-		stall[i] = stall[minLoc];
-		stall[minLoc] = temp; 
+		str temp = data[i];
+		data[i] = data[minLoc];
+		data[minLoc] = temp; 
 	}
-	
-    cout << "\tREPORT" << endl << endl;
-    cout << "Stall Name\tNet Income" << endl;			//Print in order of increasing net income
-    cout << "=================================" << endl;
-    for(int i=0;i<numStalls;i++){  
-        cout << stall[i].name << "\t\t" << stall[i].netIncome <<endl;
-		tProfit += stall[i].netIncome;
-    }  
-    
-    cout << "\n=================================" << endl;
-	cout << "\nNumber of Stalls: " << numStalls << endl;	//no. of stalls
-	cout << "\nStall that made the most profit: " << stall[numStalls-1].name << endl;		//most profitted stall
-	
-	if (tProfit>0){			//profit or loss of BAZAAR
-		cout << "\nThe total profit of the bazaar: " << tProfit << endl;
-	}else if (tProfit<0){
-		cout << "\nThe total loss of the bazaar: " << tProfit << endl;
+
+	numWords = removeDuplicates(data, numWords);
+	cout << "\n\nPrinting all distinct words: \n"; 
+	for (int i=0;i<numWords;i++){
+		for (int j=0;j<4;j++){
+			cout << setw(20) << data[i].s;
+			i++;
+		}
+		cout << "\n";
 	}
+return numWords;
+}
+
+void hangman(char c){
+	string hang = "|";
+	string stage = "=====";
+	if (c == 'f'){
+		hang = " ";
+	}
+	else if (c == 'h'){
+		stage = "     ";
+	}
+	cout << "\t\t\t\t   "<< message << endl;
+	cout << "\t\t\t\t___________________" << endl;
+	cout << "\t\t\t\t        "<< hang<<"         |" << endl;
+	cout << "\t\t\t\t        O         |" << endl;
+	cout << "\t\t\t\t       /|\\        |" << endl;
+	cout << "\t\t\t\t        |         |" << endl;
+	cout << "\t\t\t\t       / \\        |" << endl;
+	cout << "\t\t\t\t|====="<< stage <<"=======|" << endl;
+	cout << "\t\t\t\t|                 |" << endl;
+	cout << "\t\t\t\t|_________________|" << endl;
+}
+
+int checkGuess(char guess, string realWord, string &hide_word){ 
+	int match = 0;
+	int len = realWord.length();
 	
-	cout << "\nThe stall(s) that made profit: " ;			//stall(s) that made profit
-	for (int i=0;i<numStalls+1;i++){
-		if (stall[i].netIncome > 0){
-			cout << stall[i].name << ", ";
+	for (int i=0;i<len;i++){
+		if (guess == hide_word[i]){
+			return 0;
+		}
+		if(guess == realWord[i]){
+			hide_word[i] = guess;
+			match++;
+		}
+	}
+	return match;
+}
+
+void playGame(){
+	str data[100];
+	int win = 0;
+	int num = readWords(data);				//read words off file
+	int numWords = start(data, num);		//sort in ascending order and remove duplicate words
+	char letter, choice;
+	string word;
+	
+	cout << "Do you want to play? (Y/N)";
+	cin >> choice;
+	system("cls");
+	for(int i=0;i<numWords;i++){
+		word = data[i].s;
+		string hide_word(word.length(), '*');//hide words in ***
+		if(choice=='Y'){		
+			while (tries!=0){
+				hangman('n');
+				cout << "Lives left: " << tries << endl;
+				cout << hide_word << endl;
+				cout << "Guess a letter: ";
+				cin >> letter;
+				
+				system("cls");
+			
+				if (checkGuess(letter, word, hide_word) == 0){
+					message = "Incorrect!";
+					tries--;
+				} 
+				else{
+					message = "Nice Guess!";
+				}
+		
+				if (hide_word == word){
+					message = "You've Won!";
+					hangman('f');
+					cout << "Lives left: " << tries << endl;
+					cout << "The word is: " << word << endl;
+					win++;
+					cout << "Games you have won: " << win << endl;
+					break;
+				}
+			}
+			if (tries==0){
+				message = "You've Failed!";
+				hangman('h');
+				cout << "Lives left: " << tries << endl;
+				cout << "The word is: " << word << endl;
+				cout << "Games you have won: " << win;
+				break;
+			}
+		}
+		else if(choice=='N'){
+			cout << "You have decided to quit. Thank you for playing!";
+			break;
 		}
 	}
 }
 
-int main() {				//main
-	viewReport();
-return 0;
+int main() {
+	playGame();
+	return 0;
 }
